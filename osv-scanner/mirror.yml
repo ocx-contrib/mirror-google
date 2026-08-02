@@ -1,0 +1,113 @@
+extends: ../mirror-base.yml
+
+name: osv-scanner
+
+# Logical index package `google/osv-scanner` at the physical path
+# `ghcr.io/ocx-contrib/google/osv-scanner` — slash segments, never
+# hyphen-flattened. The first segment must be this repo's own GitHub owner:
+# GITHUB_TOKEN only authorises packages owned by the repo the workflow runs in.
+#
+# The namespace is the upstream vendor (`google`), which is also what this
+# repository is named for — it can later hold other Google-published tools
+# alongside this one.
+#
+# Succeeds the flat `ocx.sh/osv-scanner` coordinate this repository published
+# before the grouped layout, the same way mirror-kitware/cmake succeeds
+# mirror-cmake.
+target:
+  registry: ghcr.io
+  repository: ocx-contrib/google/osv-scanner
+
+source:
+  type: github_release
+  owner: google
+  repo: osv-scanner
+  tag_pattern: "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
+
+# ─── libc gate (Phase 3.5) — the evidence, not the conclusion ───────────────
+#
+# osv-scanner is a pure-Go binary built without cgo, so upstream ships ONE
+# Linux build per arch and it is fully static. Measured on v2.4.0:
+#
+#   $ file osv-scanner_linux_amd64
+#   ELF 64-bit LSB executable, x86-64, statically linked, Go BuildID=…, stripped
+#   $ readelf -l … | grep INTERP  → (none)
+#   $ readelf -d … | grep NEEDED  → (none)
+#   $ file osv-scanner_linux_arm64
+#   ELF 64-bit LSB executable, ARM aarch64, statically linked, …
+#
+# No PT_INTERP and no DT_NEEDED means the artifact requires nothing of the
+# host, so both Linux keys are BARE — no `+libc.*` suffix. Upstream publishes
+# no musl/alpine variant, so there is no counterpart to split against. Container
+# legs (ubuntu + alpine + fedora) live in ../mirror-base.yml and are what turn
+# that claim into evidence.
+#
+# ─── Scope (verified across EVERY in-range release, v2.0.0 … v2.4.0)
+#
+# Upstream publishes exactly eight assets per release; this mirror carries the
+# six platform binaries and deliberately not:
+#   osv-scanner_SHA256SUMS    — checksum sidecar
+#   multiple.intoto.jsonl     — SLSA provenance attestation
+#
+# The anchored ^…$ regexes are what keep those out. Resolution verified BOTH
+# ways across all 18 in-range releases: each of the six patterns matches
+# EXACTLY one asset. A pattern matching zero is silently skipped, not an
+# error — it would yield a green run with a missing platform.
+assets:
+  linux/amd64:
+    - "^osv-scanner_linux_amd64$"
+  linux/arm64:
+    - "^osv-scanner_linux_arm64$"
+  darwin/amd64:
+    - "^osv-scanner_darwin_amd64$"
+  darwin/arm64:
+    - "^osv-scanner_darwin_arm64$"
+  windows/amd64:
+    - "^osv-scanner_windows_amd64\\.exe$"
+  windows/arm64:
+    - "^osv-scanner_windows_arm64\\.exe$"
+
+asset_type:
+  # Raw binary on every platform — no archive to unpack. Renamed to
+  # `osv-scanner` (osv-scanner.exe on Windows; the .exe is appended
+  # automatically when the downloaded asset carries it), so one metadata file
+  # serves all six platforms.
+  type: binary
+  name: osv-scanner
+
+metadata:
+  default: metadata.json
+
+catalog:
+  logo: logo.svg
+
+versions:
+  # 2.0.0 is the floor for two independent reasons. Upstream only settled on
+  # versionless asset names during v1 — v1.4.0 ships
+  # `osv-scanner_1.4.0_linux_amd64`, which every pattern above matches zero
+  # times, so those releases would publish with no platforms at all and stay
+  # green. And the v1 CLI has no `scan source` subcommand (v1.9.2 exits 127 on
+  # it), which is the surface tests/smoke.star asserts.
+  min: "2.0.0"
+  new_per_run: 5
+  # Without this the generated workflow only fires on workflow_dispatch + push
+  # and never auto-discovers a new upstream release.
+  poll_interval: "0 */6 * * *"
+
+tests:
+  # `script:` resolves from the REPOSITORY ROOT — unlike `metadata.default` and
+  # `catalog.logo` above, which resolve against this spec's own directory.
+  - name: smoke
+    script: osv-scanner/tests/smoke.star
+
+annotations:
+  # From the Phase 1.5 license gate:
+  #   $ gh api repos/google/osv-scanner/license --jq '.license.spdx_id'
+  #   Apache-2.0
+  org.opencontainers.image.licenses: "Apache-2.0"
+
+announce:
+  # Spelled out, not derived from target.repository — the logical name and the
+  # physical path are related by convention only.
+  package: google/osv-scanner
+  fork: ocx-contrib/index

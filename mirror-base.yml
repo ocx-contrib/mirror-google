@@ -1,0 +1,103 @@
+# Shared base for every spec in this repository (Google-published tools).
+#
+# NOT a spec: it has no name/target/source and is never loaded on its own.
+# Everything a package owns — name, target, source, assets, asset_type,
+# metadata, catalog, tests, versions, announce, annotations — stays in that
+# package's own mirror.yml.
+#
+# ⚠️ `extends:` is a SHALLOW merge of top-level keys. A spec that sets a key
+# below replaces that block OUTRIGHT — there is no per-key merge. `platforms:`
+# is where this bites: it carries BOTH the runner matrix and the container
+# legs, so a child that restates it to tweak one runner silently drops every
+# `containers:` entry. Nothing reds — the legs simply stop existing, and every
+# os.features claim in that spec goes back to being merely asserted. Restate
+# `platforms:` IN FULL or not at all.
+
+skip_prereleases: true
+cascade: true
+
+# Carried over from the flat layout. osv-scanner versions as bare semver, so
+# `date` would be available — but nothing is published at the new grouped
+# coordinate yet and the flat repository ran on `none`, so this preserves the
+# existing behaviour rather than changing two things at once. The trade-off
+# `none` accepts is that RE-publishing an already published version reuses the
+# bare version tag and orphans the prior digest for registry GC, which would
+# break a consumer's `@sha256:` pin. Switching to `date` is a safe one-line
+# change if a re-publish is ever needed.
+build_timestamp: none
+
+verify:
+  github_asset_digest: true
+
+concurrency:
+  # Assets are single static binaries, ~30 MB each.
+  max_downloads: 8
+  max_bundles: 4
+  max_pushes: 2
+  rate_limit_ms: 100
+  max_retries: 3
+  compression_threads: 0
+
+# `off`, and it cannot be otherwise here. The scan only looks BELOW an
+# interface PATH entry of the form ${installPath}/<dir>, and a raw-binary
+# mirror has none — the executable IS the content root, so PATH is a bare
+# ${installPath}. `auto` or `verify` is rejected at spec load with exit 65
+# ("bin_scan is enabled but … declares no interface-visible ${installPath}/<dir>
+# PATH entry"). `off` with a hand-listed `binaries` in metadata.json is the
+# blessed shape for `asset_type: binary`. A future package here that ships an
+# archive with a bin/ dir should override this to `verify`.
+bin_scan: off
+
+# ─── Platform matrix ────────────────────────────────────────────────────────
+#
+# `os.features` states what an artifact REQUIRES OF THE HOST — it is not a
+# label for how it was built. osv-scanner is a pure-Go build: measured on
+# v2.4.0, both Linux binaries are fully static, no PT_INTERP and no DT_NEEDED
+# (evidence above osv-scanner/mirror.yml's `assets:`), and upstream publishes
+# no musl/glibc split to choose between. So both Linux keys are BARE. Tagging
+# them `+libc.musl` would be a false requirement that hid them from every
+# glibc host.
+#
+# A bare key claims universality, so it must prove it: ubuntu (glibc) + alpine
+# (musl) + fedora (different glibc vintage). The alpine leg IS the proof —
+# drop it and the universal claim is merely asserted.
+#
+# A future package here whose libc measurement differs must restate this whole
+# block in its own spec — see the shallow-merge warning at the top.
+platforms:
+  linux/amd64:
+    runner: ubuntu-latest
+    containers:
+      - { image: "ubuntu:24.04", shell: bash }
+      - { image: "alpine:3.20",  shell: sh }
+      - { image: "fedora:40",    shell: bash }
+  linux/arm64:
+    # arm64 container legs run natively — no qemu — so the runner arch must
+    # match the platform or the renderer reds the leg up front.
+    runner: ubuntu-24.04-arm
+    containers:
+      - { image: "ubuntu:24.04", shell: bash }
+      - { image: "alpine:3.20",  shell: sh }
+      - { image: "fedora:40",    shell: bash }
+  darwin/amd64:
+    # Intel slice tested on the arm64 macos-14 runner via Rosetta 2 — GitHub's
+    # native macos-13 Intel pool is exhausted and deadlocks the push job.
+    runner: macos-14
+    prefix: ["arch", "-x86_64"]
+  darwin/arm64:
+    runner: macos-14
+    shell: bash
+  windows/amd64:
+    runner: windows-latest
+    shell: pwsh
+  windows/arm64:
+    # Native arm64 Windows runner — the amd64 pool cannot execute an ARM64 PE.
+    runner: windows-11-arm
+    shell: pwsh
+  # No `containers:` on darwin or windows — those runners have no Linux
+  # container engine, and the key is rejected at spec load.
+
+notify:
+  discord:
+    webhook_secret: OCX_MIRROR_DISCORD_HOOK
+    user_id: "227748867204972545"  # pinged in-message on failures
