@@ -89,12 +89,12 @@ source:
 #                                                v0.21.8; absent from 2 of the 3
 #                                                in-range releases
 #
-# The exotic arches are omitted on purpose and not for lack of assets: GitHub
-# Actions offers no runner for any of them, so a declared leg could never be
-# tested and would publish an untested platform claim. loong64 additionally
-# fails the both-ways check on v0.21.6 and v0.21.7. If OCX ever wants them,
-# they come back with a per-platform `min_version` for loong64 — never a global
-# `versions.min` bump.
+# The exotic arches are not a judgement call: **OCX's architecture enum has
+# only `amd64` and `arm64`** (`ocx_lib/src/oci/platform/architecture.rs` — the
+# i386 / ARM / LoongArch64 / Mips variants are commented out as unsupported),
+# so `linux/armv6`, `linux/386`, `linux/ppc64le`, `linux/riscv64`,
+# `linux/s390x` and `linux/loong64` are upstream *assets* that cannot be
+# expressed as platform keys at all. They are dropped, not excluded.
 assets:
   linux/amd64:
     - "^go-containerregistry_Linux_x86_64\\.tar\\.gz$"
@@ -105,11 +105,11 @@ assets:
     - "^go-containerregistry_Darwin_x86_64\\.tar\\.gz$"
   darwin/arm64:
     - "^go-containerregistry_Darwin_arm64\\.tar\\.gz$"
-  # ── PASS 3 (windows) — note upstream ships .tar.gz on Windows too, not .zip ─
-  # windows/amd64:
-  #   - "^go-containerregistry_Windows_x86_64\\.tar\\.gz$"
-  # windows/arm64:
-  #   - "^go-containerregistry_Windows_arm64\\.tar\\.gz$"
+  # ── PASS 3 (windows) — LANDED. Upstream ships .tar.gz on Windows too, not .zip
+  windows/amd64:
+    - "^go-containerregistry_Windows_x86_64\\.tar\\.gz$"
+  windows/arm64:
+    - "^go-containerregistry_Windows_arm64\\.tar\\.gz$"
 
 # ../mirror-base.yml sets `build_timestamp: none`, which is osv-scanner legacy
 # (that coordinate had already published every in-range version at the bare
@@ -205,14 +205,14 @@ platforms:
   darwin/arm64:
     runner: macos-14
     shell: bash
-  # ── PASS 3 (windows) ───────────────────────────────────────────────────────
-  # windows/amd64:
-  #   runner: windows-latest
-  #   shell: pwsh
-  # windows/arm64:
-  #   # Native arm64 Windows runner — the amd64 pool cannot execute an ARM64 PE.
-  #   runner: windows-11-arm
-  #   shell: pwsh
+  # ── PASS 3 (windows) — LANDED ──────────────────────────────────────────────
+  windows/amd64:
+    runner: windows-latest
+    shell: pwsh
+  windows/arm64:
+    # Native arm64 Windows runner — the amd64 pool cannot execute an ARM64 PE.
+    runner: windows-11-arm
+    shell: pwsh
   #
   # No `containers:` on darwin or windows — those runners have no Linux
   # container engine, and the key is rejected at spec load.
