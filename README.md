@@ -6,6 +6,7 @@ repository, one spec directory per package.
 | Package | Spec | Publishes to | Announced as | Upstream SPDX |
 |---|---|---|---|---|
 | [OSV-Scanner](https://github.com/google/osv-scanner) | [`osv-scanner/mirror.yml`](osv-scanner/mirror.yml) | `ghcr.io/ocx-contrib/google/osv-scanner` | `ocx.sh/google/osv-scanner` | `Apache-2.0` |
+| [crane](https://github.com/google/go-containerregistry) | [`crane/mirror.yml`](crane/mirror.yml) | `ghcr.io/ocx-contrib/google/crane` | `ocx.sh/google/crane` | `Apache-2.0` |
 
 Each upstream release is discovered, re-bundled, smoke-tested per
 `(version, platform)` and only then pushed with cascade tags, after which the
@@ -20,7 +21,8 @@ result is announced into the OCX index.
 
 ```
 mirror-base.yml         repo-wide policy every spec inherits via `extends:`
-osv-scanner/
+osv-scanner/            one directory per package — same five files each
+crane/
 ├── mirror.yml          the spec — never at the repo root
 ├── metadata.json       bundle interface
 ├── CATALOG.md          → ocx package describe
@@ -52,6 +54,16 @@ container leg in `mirror-base.yml` is what turns that claim into evidence; the
 measurement itself is recorded above the `assets:` block in
 `osv-scanner/mirror.yml`.
 
+`crane` measures the same way — pure-Go, cgo-free, no `PT_INTERP` and no
+`DT_NEEDED` on either arch for any of its three binaries (evidence above its
+`assets:` block) — so it inherits `mirror-base.yml`'s matrix unchanged rather
+than restating it. It ships **linux only** for now: darwin and windows keys are
+pre-written as commented lines in `crane/mirror.yml` and land in later passes.
+The exotic Linux arches upstream also builds (`armv6`, `i386`, `ppc64le`,
+`riscv64`, `s390x`, `loong64`) are deliberately not carried — GitHub Actions
+has no runner for any of them, so a declared leg would publish a claim no
+container test could ever check.
+
 The version floor is `2.0.0`. Below it upstream had not settled on versionless
 asset names (v1.4.0 ships `osv-scanner_1.4.0_linux_amd64`, which the anchored
 patterns match zero times — a green run with no platforms), and the v1 CLI has
@@ -61,13 +73,15 @@ no `scan source` subcommand for the smoke test to assert.
 
 | File | Edit | Regenerate after |
 |------|------|------------------|
-| `mirror-base.yml`, `osv-scanner/mirror.yml` | hand | yes — see below |
-| `osv-scanner/{metadata.json,CATALOG.md,logo.*}` | hand | — |
-| `osv-scanner/tests/smoke.star` | hand | — |
+| `mirror-base.yml`, `<pkg>/mirror.yml` | hand | yes — see below |
+| `<pkg>/{metadata.json,CATALOG.md,logo.*}` | hand | — |
+| `<pkg>/tests/smoke.star` | hand | — |
 | `.github/workflows/*.yml` | **generated — never hand-edit** | re-run when a spec changes |
 
 ```bash
-ocx-mirror package pipeline generate ci --spec osv-scanner/mirror.yml
+ocx-mirror package pipeline generate ci \
+  --spec osv-scanner/mirror.yml \
+  --spec crane/mirror.yml
 ```
 
 **Name every spec.** `--spec` *appends* rather than replaces, so a command
@@ -90,6 +104,15 @@ osv-scanner ships as a raw binary, so the bundle's only PATH entry is a bare
 load with exit 65. `mirror-base.yml` therefore sets `bin_scan: off` and
 `osv-scanner/metadata.json` hand-lists `binaries: ["osv-scanner"]` — the
 blessed shape for this asset type.
+
+`crane` reaches the same place from the other direction: its archives are
+**flat**, with `LICENSE`, `README.md` and the executables all at the archive
+root and no wrapper directory, so `strip_components: 0` puts them at the
+content root and PATH is again a bare `${installPath}`. That archive bundles
+**three** executables — `crane`, `gcrane` and `krane` — and all three land on
+PATH, so all three are declared. Declaring only `crane` would misrepresent the
+bundle's surface exactly as a fabricated entry would; `crane/tests/smoke.star`
+runs all three and asserts they report the same version.
 
 ## The smoke test is offline
 
