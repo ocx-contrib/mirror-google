@@ -14,6 +14,7 @@ and no endorsement is implied.
 |---|---|---|
 | `osv-scanner` | `ghcr.io/ocx-contrib/google/osv-scanner` | `Apache-2.0` |
 | `crane` | `ghcr.io/ocx-contrib/google/crane` | `Apache-2.0` |
+| `ko` | `ghcr.io/ocx-contrib/google/ko` | `Apache-2.0` |
 
 ---
 
@@ -63,6 +64,32 @@ under permissive licenses, enumerated in upstream's `go.mod`.
 
 The go-containerregistry name and the crane logo are marks of Google LLC, used
 for catalog identification under nominative fair use.
+
+No modifications are made to any upstream artifact in this repository; they are
+republished byte-for-byte inside an OCX bundle.
+
+---
+
+## `ko`
+
+Upstream: <https://github.com/google/ko>
+Published to `ghcr.io/ocx-contrib/google/ko`.
+
+| Component | SPDX | Holder |
+|---|---|---|
+| ko (`ko`) | **Apache-2.0** | Copyright Google LLC |
+
+Permissive; redistribution of the compiled binary is granted under the terms of
+<https://github.com/google/ko/blob/main/LICENSE>. Verified via
+`gh api repos/google/ko/license` → `Apache-2.0`. As with crane, upstream ships
+the `LICENSE` file **inside** every release archive, so the terms travel with
+the redistributed bytes as well as being referenced here.
+
+The binary is a pure-Go static build that links third-party Go modules under
+permissive licenses, enumerated in upstream's `go.mod`.
+
+ko is a CNCF Sandbox project; the ko name and logo are used for catalog
+identification under nominative fair use.
 
 No modifications are made to any upstream artifact in this repository; they are
 republished byte-for-byte inside an OCX bundle.

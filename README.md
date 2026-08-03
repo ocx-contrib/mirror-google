@@ -7,6 +7,7 @@ repository, one spec directory per package.
 |---|---|---|---|---|
 | [OSV-Scanner](https://github.com/google/osv-scanner) | [`osv-scanner/mirror.yml`](osv-scanner/mirror.yml) | `ghcr.io/ocx-contrib/google/osv-scanner` | `ocx.sh/google/osv-scanner` | `Apache-2.0` |
 | [crane](https://github.com/google/go-containerregistry) | [`crane/mirror.yml`](crane/mirror.yml) | `ghcr.io/ocx-contrib/google/crane` | `ocx.sh/google/crane` | `Apache-2.0` |
+| [ko](https://github.com/google/ko) | [`ko/mirror.yml`](ko/mirror.yml) | `ghcr.io/ocx-contrib/google/ko` | `ocx.sh/google/ko` | `Apache-2.0` |
 
 Each upstream release is discovered, re-bundled, smoke-tested per
 `(version, platform)` and only then pushed with cascade tags, after which the
@@ -23,6 +24,7 @@ result is announced into the OCX index.
 mirror-base.yml         repo-wide policy every spec inherits via `extends:`
 osv-scanner/            one directory per package — same five files each
 crane/
+ko/
 ├── mirror.yml          the spec — never at the repo root
 ├── metadata.json       bundle interface
 ├── CATALOG.md          → ocx package describe
@@ -64,6 +66,14 @@ The exotic Linux arches upstream also builds (`armv6`, `i386`, `ppc64le`,
 has no runner for any of them, so a declared leg would publish a claim no
 container test could ever check.
 
+`ko` measures the same way and ships under the same staging, with one extra
+hazard of its own: **every ko release publishes each platform twice**, once as
+`ko_<version>_<OS>_<arch>.tar.gz` and once as an unversioned twin
+`ko_<OS>_<arch>.tar.gz`. A pattern that does not demand a literal semver token
+right after `ko_` matches both and fails the version with an ambiguous
+`>1 match`. The patterns in `ko/mirror.yml` therefore carry
+`\d+\.\d+\.\d+` and are anchored at both ends.
+
 The version floor is `2.0.0`. Below it upstream had not settled on versionless
 asset names (v1.4.0 ships `osv-scanner_1.4.0_linux_amd64`, which the anchored
 patterns match zero times — a green run with no platforms), and the v1 CLI has
@@ -81,7 +91,8 @@ no `scan source` subcommand for the smoke test to assert.
 ```bash
 ocx-mirror package pipeline generate ci \
   --spec osv-scanner/mirror.yml \
-  --spec crane/mirror.yml
+  --spec crane/mirror.yml \
+  --spec ko/mirror.yml
 ```
 
 **Name every spec.** `--spec` *appends* rather than replaces, so a command
