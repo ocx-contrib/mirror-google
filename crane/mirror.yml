@@ -100,11 +100,11 @@ assets:
     - "^go-containerregistry_Linux_x86_64\\.tar\\.gz$"
   linux/arm64:
     - "^go-containerregistry_Linux_arm64\\.tar\\.gz$"
-  # ── PASS 2 (darwin) — uncomment by hand, never by sed, then regenerate CI ──
-  # darwin/amd64:
-  #   - "^go-containerregistry_Darwin_x86_64\\.tar\\.gz$"
-  # darwin/arm64:
-  #   - "^go-containerregistry_Darwin_arm64\\.tar\\.gz$"
+  # ── PASS 2 (darwin) — LANDED ───────────────────────────────────────────────
+  darwin/amd64:
+    - "^go-containerregistry_Darwin_x86_64\\.tar\\.gz$"
+  darwin/arm64:
+    - "^go-containerregistry_Darwin_arm64\\.tar\\.gz$"
   # ── PASS 3 (windows) — note upstream ships .tar.gz on Windows too, not .zip ─
   # windows/amd64:
   #   - "^go-containerregistry_Windows_x86_64\\.tar\\.gz$"
@@ -196,15 +196,15 @@ platforms:
       - { image: "ubuntu:24.04", shell: bash }
       - { image: "alpine:3.20",  shell: sh }
       - { image: "fedora:40",    shell: bash }
-  # ── PASS 2 (darwin) ────────────────────────────────────────────────────────
-  # darwin/amd64:
-  #   # Intel slice tested on the arm64 macos-14 runner via Rosetta 2 — GitHub's
-  #   # native macos-13 Intel pool is exhausted and deadlocks the push job.
-  #   runner: macos-14
-  #   prefix: ["arch", "-x86_64"]
-  # darwin/arm64:
-  #   runner: macos-14
-  #   shell: bash
+  # ── PASS 2 (darwin) — LANDED ───────────────────────────────────────────────
+  darwin/amd64:
+    # Intel slice tested on the arm64 macos-14 runner via Rosetta 2 — GitHub's
+    # native macos-13 Intel pool is exhausted and deadlocks the push job.
+    runner: macos-14
+    prefix: ["arch", "-x86_64"]
+  darwin/arm64:
+    runner: macos-14
+    shell: bash
   # ── PASS 3 (windows) ───────────────────────────────────────────────────────
   # windows/amd64:
   #   runner: windows-latest
