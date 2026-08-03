@@ -97,11 +97,11 @@ assets:
     - "^ko_\\d+\\.\\d+\\.\\d+_Darwin_x86_64\\.tar\\.gz$"
   darwin/arm64:
     - "^ko_\\d+\\.\\d+\\.\\d+_Darwin_arm64\\.tar\\.gz$"
-  # ── PASS 3 (windows) — note upstream ships .tar.gz on Windows too, not .zip ─
-  # windows/amd64:
-  #   - "^ko_\\d+\\.\\d+\\.\\d+_Windows_x86_64\\.tar\\.gz$"
-  # windows/arm64:
-  #   - "^ko_\\d+\\.\\d+\\.\\d+_Windows_arm64\\.tar\\.gz$"
+  # ── PASS 3 (windows) — LANDED. Upstream ships .tar.gz on Windows too, not .zip
+  windows/amd64:
+    - "^ko_\\d+\\.\\d+\\.\\d+_Windows_x86_64\\.tar\\.gz$"
+  windows/arm64:
+    - "^ko_\\d+\\.\\d+\\.\\d+_Windows_arm64\\.tar\\.gz$"
 
 # ../mirror-base.yml sets `build_timestamp: none`, which is osv-scanner legacy
 # (that coordinate had already published every in-range version at the bare
@@ -196,14 +196,14 @@ platforms:
   darwin/arm64:
     runner: macos-14
     shell: bash
-  # ── PASS 3 (windows) ───────────────────────────────────────────────────────
-  # windows/amd64:
-  #   runner: windows-latest
-  #   shell: pwsh
-  # windows/arm64:
-  #   # Native arm64 Windows runner — the amd64 pool cannot execute an ARM64 PE.
-  #   runner: windows-11-arm
-  #   shell: pwsh
+  # ── PASS 3 (windows) — LANDED ──────────────────────────────────────────────
+  windows/amd64:
+    runner: windows-latest
+    shell: pwsh
+  windows/arm64:
+    # Native arm64 Windows runner — the amd64 pool cannot execute an ARM64 PE.
+    runner: windows-11-arm
+    shell: pwsh
   #
   # No `containers:` on darwin or windows — those runners have no Linux
   # container engine, and the key is rejected at spec load.
