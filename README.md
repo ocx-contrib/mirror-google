@@ -58,13 +58,23 @@ measurement itself is recorded above the `assets:` block in
 
 `crane` measures the same way — pure-Go, cgo-free, no `PT_INTERP` and no
 `DT_NEEDED` on either arch for any of its three binaries (evidence above its
-`assets:` block) — so it inherits `mirror-base.yml`'s matrix unchanged rather
-than restating it. It ships **linux only** for now: darwin and windows keys are
-pre-written as commented lines in `crane/mirror.yml` and land in later passes.
-The exotic Linux arches upstream also builds (`armv6`, `i386`, `ppc64le`,
-`riscv64`, `s390x`, `loong64`) are deliberately not carried — GitHub Actions
-has no runner for any of them, so a declared leg would publish a claim no
-container test could ever check.
+`assets:` block), so both its Linux keys are bare with the alpine leg attached.
+It publishes all six platforms — linux, darwin and windows on amd64 and arm64
+— rolled out in three staged passes (linux, then darwin, then windows), each
+its own commit and CI run.
+
+Both `crane` and `ko` restate `platforms:` in full rather than inheriting
+`mirror-base.yml`'s block, and that is deliberate. Staging only the `assets:`
+keys does **not** save runner minutes: the generated test matrix is static, so
+a platform declared with no matching asset still boots its `macos-14` /
+`windows-11-arm` runner, skips every version and reports **success** having
+tested nothing. The `platforms:` entry has to be commented out too, and
+uncommented in the same edit as its assets.
+
+The other arches upstream builds — `armv6`, `i386`, `mips64le`, `ppc64le`,
+`riscv64`, `s390x`, `loong64` — are not carried, and that is not a policy
+call: OCX's architecture enum has only `amd64` and `arm64`, so they cannot be
+expressed as platform keys at all.
 
 `ko` measures the same way and ships under the same staging, with one extra
 hazard of its own: **every ko release publishes each platform twice**, once as
