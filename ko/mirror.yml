@@ -81,19 +81,22 @@ source:
 #   *_Linux_{i386,mips64le,ppc64le,riscv64,s390x}  — exotic Linux arches
 #   *_Windows_i386                                  — 32-bit Windows
 #
-# The exotic arches are omitted on purpose and not for lack of assets: GitHub
-# Actions offers no runner for any of them, so a declared leg could never be
-# tested and would publish an untested platform claim.
+# The exotic arches are not a judgement call: **OCX's architecture enum has
+# only `amd64` and `arm64`** (`ocx_lib/src/oci/platform/architecture.rs` — the
+# i386 / ARM / LoongArch64 / Mips variants are commented out as unsupported),
+# so `linux/386`, `linux/mips64le`, `linux/ppc64le`, `linux/riscv64`,
+# `linux/s390x` and `windows/386` are upstream *assets* that cannot be
+# expressed as platform keys at all. They are dropped, not excluded.
 assets:
   linux/amd64:
     - "^ko_\\d+\\.\\d+\\.\\d+_Linux_x86_64\\.tar\\.gz$"
   linux/arm64:
     - "^ko_\\d+\\.\\d+\\.\\d+_Linux_arm64\\.tar\\.gz$"
-  # ── PASS 2 (darwin) — uncomment by hand, never by sed, then regenerate CI ──
-  # darwin/amd64:
-  #   - "^ko_\\d+\\.\\d+\\.\\d+_Darwin_x86_64\\.tar\\.gz$"
-  # darwin/arm64:
-  #   - "^ko_\\d+\\.\\d+\\.\\d+_Darwin_arm64\\.tar\\.gz$"
+  # ── PASS 2 (darwin) — LANDED ───────────────────────────────────────────────
+  darwin/amd64:
+    - "^ko_\\d+\\.\\d+\\.\\d+_Darwin_x86_64\\.tar\\.gz$"
+  darwin/arm64:
+    - "^ko_\\d+\\.\\d+\\.\\d+_Darwin_arm64\\.tar\\.gz$"
   # ── PASS 3 (windows) — note upstream ships .tar.gz on Windows too, not .zip ─
   # windows/amd64:
   #   - "^ko_\\d+\\.\\d+\\.\\d+_Windows_x86_64\\.tar\\.gz$"
@@ -184,15 +187,15 @@ platforms:
       - { image: "ubuntu:24.04", shell: bash }
       - { image: "alpine:3.20",  shell: sh }
       - { image: "fedora:40",    shell: bash }
-  # ── PASS 2 (darwin) ────────────────────────────────────────────────────────
-  # darwin/amd64:
-  #   # Intel slice tested on the arm64 macos-14 runner via Rosetta 2 — GitHub's
-  #   # native macos-13 Intel pool is exhausted and deadlocks the push job.
-  #   runner: macos-14
-  #   prefix: ["arch", "-x86_64"]
-  # darwin/arm64:
-  #   runner: macos-14
-  #   shell: bash
+  # ── PASS 2 (darwin) — LANDED ───────────────────────────────────────────────
+  darwin/amd64:
+    # Intel slice tested on the arm64 macos-14 runner via Rosetta 2 — GitHub's
+    # native macos-13 Intel pool is exhausted and deadlocks the push job.
+    runner: macos-14
+    prefix: ["arch", "-x86_64"]
+  darwin/arm64:
+    runner: macos-14
+    shell: bash
   # ── PASS 3 (windows) ───────────────────────────────────────────────────────
   # windows/amd64:
   #   runner: windows-latest
