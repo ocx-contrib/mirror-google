@@ -6,7 +6,7 @@ name: crane
 
 on:
   schedule:
-    - cron: '8 */6 * * *'
+    - cron: '32 0-23/6 * * *'
   workflow_dispatch:
   push:
     branches: [main]

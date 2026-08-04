@@ -6,7 +6,7 @@ name: ko
 
 on:
   schedule:
-    - cron: '9 */6 * * *'
+    - cron: '0 2-23/6 * * *'
   workflow_dispatch:
   push:
     branches: [main]
