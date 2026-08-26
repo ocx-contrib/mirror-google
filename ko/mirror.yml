@@ -11,13 +11,18 @@ target:
   repository: ocx-contrib/google/ko
 
 source:
+  # `google/ko` → `ko-build/ko`: the project moved out of the `google` org.
+  # GitHub redirects the old path, so discovery kept working — but a redirect
+  # is upstream's courtesy, not a guarantee, so the spec names the real owner.
+  # The published coordinate stays `google/ko`: re-homing it would orphan
+  # every consumer pin (same call as mirror-hawkeye's).
   type: github_release
-  owner: google
+  owner: ko-build
   repo: ko
   # ⚠️ PRERELEASE CANNOT BE INFERRED FROM TAG TEXT HERE. `v0.15.3` is a clean
   # `vX.Y.Z` tag with no `-rc`/`-beta` suffix and is nonetheless flagged
   # `"prerelease": true` by the GitHub API:
-  #   $ gh api repos/google/ko/releases --jq '.[] | "\(.tag_name) \(.prerelease)"'
+  #   $ gh api repos/ko-build/ko/releases --jq '.[] | "\(.tag_name) \(.prerelease)"'
   #   … v0.15.4 false / v0.15.3 TRUE / v0.15.2 false …
   # It sits well below this mirror's floor so nothing changes today, but the
   # regex below is deliberately NOT the prerelease filter — ../mirror-base.yml's
@@ -58,7 +63,7 @@ source:
 # `ko_<OS>_<arch>.tar.gz`. Re-listed and confirmed on ALL THREE in-range tags,
 # not just the recon sample:
 #
-#   $ gh api repos/google/ko/releases/tags/v0.19.1 --jq '.assets[].name'
+#   $ gh api repos/ko-build/ko/releases/tags/v0.19.1 --jq '.assets[].name'
 #   … ko_0.19.1_Linux_x86_64.tar.gz … ko_Linux_x86_64.tar.gz …   (same in
 #   v0.19.0 and v0.18.1, for all 12 platform legs)
 #
