@@ -27,7 +27,9 @@ expect.ok(ocx.run(YAMLFMT, "t.yaml"))
 expect.ok(ocx.run(YAMLFMT, "-lint", "t.yaml"))
 
 # ... and read back as exactly the normalised document (keys keep their order).
-expect.eq(ocx.read_file("t.yaml"), "b: 2\na: [1, 2]\nlist:\n  - x\n  - y\n")
+# yamlfmt writes the platform line ending (CRLF on Windows, measured in CI), so
+# normalise before comparing; the content is the contract, not the EOL.
+expect.eq(ocx.read_file("t.yaml").replace("\r\n", "\n"), "b: 2\na: [1, 2]\nlist:\n  - x\n  - y\n")
 
 # ── Tier 3b: invalid YAML must be rejected, not echoed ──────────────────────
 ocx.write_file("bad.yaml", "a: [unclosed\n")
