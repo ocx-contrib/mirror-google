@@ -8,6 +8,7 @@ repository, one spec directory per package.
 | [OSV-Scanner](https://github.com/google/osv-scanner) | [`osv-scanner/mirror.yml`](osv-scanner/mirror.yml) | `ghcr.io/ocx-contrib/google/osv-scanner` | `ocx.sh/google/osv-scanner` | `Apache-2.0` |
 | [crane](https://github.com/google/go-containerregistry) | [`crane/mirror.yml`](crane/mirror.yml) | `ghcr.io/ocx-contrib/google/crane` | `ocx.sh/google/crane` | `Apache-2.0` |
 | [ko](https://github.com/google/ko) | [`ko/mirror.yml`](ko/mirror.yml) | `ghcr.io/ocx-contrib/google/ko` | `ocx.sh/google/ko` | `Apache-2.0` |
+| [yamlfmt](https://github.com/google/yamlfmt) | [`yamlfmt/mirror.yml`](yamlfmt/mirror.yml) | `ghcr.io/ocx-contrib/google/yamlfmt` | `ocx.sh/google/yamlfmt` | `Apache-2.0` |
 
 Each upstream release is discovered, re-bundled, smoke-tested per
 `(version, platform)` and only then pushed with cascade tags, after which the
@@ -25,6 +26,7 @@ mirror-base.yml         repo-wide policy every spec inherits via `extends:`
 osv-scanner/            one directory per package — same five files each
 crane/
 ko/
+yamlfmt/
 ├── mirror.yml          the spec — never at the repo root
 ├── metadata.json       bundle interface
 ├── CATALOG.md          → ocx package describe
@@ -102,7 +104,8 @@ no `scan source` subcommand for the smoke test to assert.
 ocx-mirror package pipeline generate ci \
   --spec osv-scanner/mirror.yml \
   --spec crane/mirror.yml \
-  --spec ko/mirror.yml
+  --spec ko/mirror.yml \
+  --spec yamlfmt/mirror.yml
 ```
 
 **Name every spec.** `--spec` *appends* rather than replaces, so a command

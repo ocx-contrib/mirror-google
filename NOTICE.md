@@ -15,6 +15,7 @@ and no endorsement is implied.
 | `osv-scanner` | `ghcr.io/ocx-contrib/google/osv-scanner` | `Apache-2.0` |
 | `crane` | `ghcr.io/ocx-contrib/google/crane` | `Apache-2.0` |
 | `ko` | `ghcr.io/ocx-contrib/google/ko` | `Apache-2.0` |
+| `yamlfmt` | `ghcr.io/ocx-contrib/google/yamlfmt` | `Apache-2.0` |
 
 ---
 
@@ -90,6 +91,30 @@ permissive licenses, enumerated in upstream's `go.mod`.
 
 ko is a CNCF Sandbox project; the ko name and logo are used for catalog
 identification under nominative fair use.
+
+No modifications are made to any upstream artifact in this repository; they are
+republished byte-for-byte inside an OCX bundle.
+
+---
+
+## `yamlfmt`
+
+Upstream: <https://github.com/google/yamlfmt>
+Published to `ghcr.io/ocx-contrib/google/yamlfmt`.
+
+| Component | SPDX | Holder |
+|---|---|---|
+| yamlfmt (`yamlfmt`) | **Apache-2.0** | Copyright Google LLC |
+
+Permissive; redistribution of the compiled binary is granted under the terms of
+<https://github.com/google/yamlfmt/blob/main/LICENSE>. Verified via
+`gh api repos/google/yamlfmt/license` -> `Apache-2.0`. Upstream ships the
+`LICENSE` file **inside** every release archive, so the terms travel with the
+redistributed bytes as well as being referenced here.
+
+The binary is a pure-Go static build that links third-party Go modules under
+permissive licenses, enumerated in upstream's `go.mod`. The logo is an original
+glyph authored for this catalog entry (upstream publishes none).
 
 No modifications are made to any upstream artifact in this repository; they are
 republished byte-for-byte inside an OCX bundle.

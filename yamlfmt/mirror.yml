@@ -1,0 +1,101 @@
+extends: ../mirror-base.yml
+
+name: yamlfmt
+
+# Logical index package `google/yamlfmt` at the physical path
+# `ghcr.io/ocx-contrib/google/yamlfmt` — slash segments, never hyphen-flattened.
+target:
+  registry: ghcr.io
+  repository: ocx-contrib/google/yamlfmt
+
+source:
+  type: github_release
+  owner: google
+  repo: yamlfmt
+  tag_pattern: "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
+
+# ─── libc gate (Phase 3.5) — the evidence, not the conclusion ───────────────
+#
+# Pure-Go goreleaser build, one Linux binary per arch. Measured on v0.21.0
+# (newest) and v0.10.0 (oldest in range; v0.1.0 also checked):
+#
+#   $ file yamlfmt            (v0.21.0 Linux_x86_64)
+#   ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped
+#   $ file yamlfmt            (v0.21.0 Linux_arm64)
+#   ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, stripped
+#   $ file yamlfmt            (v0.1.0 x86_64 / arm64) → statically linked, both
+#   readelf -l | grep -c INTERP → 0     readelf -d | grep -c NEEDED → 0   (all four)
+#
+# No PT_INTERP, no DT_NEEDED: the artifact requires NOTHING of the host
+# userland, so both Linux keys are BARE (a `+libc.musl` tag on a static build
+# would be a false requirement hiding it from glibc hosts). Upstream ships no
+# musl/gnu split. The alpine container leg (inherited from ../mirror-base.yml)
+# is what turns the universal claim into evidence.
+#
+# Platform resolution verified BOTH ways: for all 16 releases in range
+# (v0.10.0 … v0.21.0) each of the six patterns below matches exactly ONE asset.
+# Upstream also ships, and this mirror deliberately omits:
+#   checksums.txt(.pem/.sig)  — sidecars
+#   *_Linux_i386, *_Windows_i386 — OCX's architecture enum has only amd64/arm64,
+#                                  so 32-bit x86 cannot be expressed as a key.
+# Windows ships .tar.gz (not .zip) like the other Go-releaser tools here.
+assets:
+  linux/amd64:
+    - "^yamlfmt_\\d+\\.\\d+\\.\\d+_Linux_x86_64\\.tar\\.gz$"
+  linux/arm64:
+    - "^yamlfmt_\\d+\\.\\d+\\.\\d+_Linux_arm64\\.tar\\.gz$"
+  darwin/amd64:
+    - "^yamlfmt_\\d+\\.\\d+\\.\\d+_Darwin_x86_64\\.tar\\.gz$"
+  darwin/arm64:
+    - "^yamlfmt_\\d+\\.\\d+\\.\\d+_Darwin_arm64\\.tar\\.gz$"
+  windows/amd64:
+    - "^yamlfmt_\\d+\\.\\d+\\.\\d+_Windows_x86_64\\.tar\\.gz$"
+  windows/arm64:
+    - "^yamlfmt_\\d+\\.\\d+\\.\\d+_Windows_arm64\\.tar\\.gz$"
+
+# Fleet rule; overrides the base's legacy `none`. Versions are plain X.Y.Z, so
+# `date` does not empty the mirror.
+build_timestamp: date
+
+asset_type:
+  # FLAT archive on every platform — LICENSE, README.md and the binary
+  # (`yamlfmt` / `yamlfmt.exe`) at the archive root, verified by `tar tzvf` on
+  # Linux x86_64/arm64 + Windows x86_64 (v0.21.0) and Linux (v0.10.0, v0.1.0).
+  # Nothing to strip, PATH is a bare ${installPath}, bin_scan stays `off`
+  # (see ../mirror-base.yml).
+  type: archive
+  strip_components: 0
+
+metadata:
+  default: metadata.json
+
+catalog:
+  logo: logo.svg
+
+versions:
+  # v0.10.0 is the first release with a `-version` flag (v0.1.0–v0.9.0 reject
+  # it), which the smoke test's Tier 2 needs; the lint/format/invalid-input
+  # contract in tests/smoke.star was measured identical on 0.10, 0.12, 0.14,
+  # 0.17 and 0.21. Asset names and flat layout are uniform across the range.
+  min: "0.10.0"
+  new_per_run: 5
+  # python3 .claude/skills/create-mirror/scripts/poll_stagger.py google/yamlfmt
+  poll_interval: "1 5-23/6 * * *"
+
+tests:
+  # `script:` resolves from the REPOSITORY ROOT.
+  - name: smoke
+    script: yamlfmt/tests/smoke.star
+
+# `platforms:` is inherited from ../mirror-base.yml (all six keys, libc-correct
+# for a static binary) — not restated.
+
+annotations:
+  #   $ gh api repos/google/yamlfmt/license --jq '.license.spdx_id'
+  #   Apache-2.0
+  # LICENSE also travels inside every release archive.
+  org.opencontainers.image.licenses: "Apache-2.0"
+
+announce:
+  package: google/yamlfmt
+  fork: ocx-contrib/index
